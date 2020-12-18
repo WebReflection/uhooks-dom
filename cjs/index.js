@@ -50,6 +50,7 @@ const hooked = fn => {
 exports.hooked = hooked;
 
 (m => {
+  exports.wait = m.wait;
   exports.createContext = m.createContext;
   exports.useContext = m.useContext;
   exports.useCallback = m.useCallback;

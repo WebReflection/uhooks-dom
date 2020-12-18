@@ -384,6 +384,7 @@ self.uhooksDOM = (function (exports) {
   exports.useReducer = useReducer;
   exports.useRef = useRef;
   exports.useState = useState;
+  exports.wait = wait;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

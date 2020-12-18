@@ -48,6 +48,7 @@ export const hooked = fn => {
 };
 
 export {
+  wait,
   createContext, useContext,
   useCallback, useMemo,
   useEffect, useLayoutEffect,
