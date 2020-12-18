@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>uhooks-dom</title>
+  <script type="module">
+  import {render, html} from 'https://unpkg.com/uhtml?module';
+
+  import(
+    /^(?:localhost|[::1]|127(?:.d+){3})$/.test(location.hostname) ?
+    '../esm/index.js' :
+    'https://unpkg.com/uhooks-dom?module'
+  )
+  .then(({hooked, useEffect, useRef, useState}) => {
+
+    let toggle = false;
+    const Button = element => hooked(text => {
+      useEffect(
+        () => {
+          console.log('connected', toggle);
+          return () => console.log('disconnected', toggle);
+        }
+      );
+      const [i, increment] = useState(0);
+      const onclick = () => {
+        toggle = !toggle;
+        increment(i + 1);
+      };
+      return render(element, toggle ?
+        html`
+          <button onclick=${onclick}>
+            ${text} ${i}
+          </button>
+        ` :
+        html`
+          <p onclick=${onclick}>
+            ${text} ${i}
+          </p>
+        `
+      );
+    });
+
+    const button = Button(document.createElement('div'));
+
+    render(document.body, button('hello'));
+  });
+  </script>
+</head>
+<body></body>
+</html>
