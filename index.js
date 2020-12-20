@@ -326,16 +326,18 @@ self.uhooksDOM = (function (exports) {
   };
 
   /*! (c) Andrea Giammarchi - ISC */
-  var fx$1 = null;
-  var effects$1 = new WeakMap();
+  var h$1 = null,
+      c = null,
+      a = null;
+  var fx$1 = new WeakMap();
 
-  var wrap = function wrap(fx, reduced) {
-    return fx ? [reduced[0], function (value) {
-      if (!effects$1.has(fx)) {
-        effects$1.set(fx, 0);
+  var wrap = function wrap(h, c, a, reduced) {
+    return h ? [reduced[0], function (value) {
+      if (!fx$1.has(h)) {
+        fx$1.set(h, 0);
         wait.then(function () {
-          effects$1["delete"](fx);
-          fx();
+          fx$1["delete"](h);
+          h.apply(c, a);
         });
       }
 
@@ -345,21 +347,27 @@ self.uhooksDOM = (function (exports) {
 
   var hooked$1 = function hooked$1(callback, outer) {
     return hooked(outer ? function hook() {
-      var prev = fx$1;
-      fx$1 = hook;
+      var ph = h$1,
+          pc = c,
+          pa = a;
+      h$1 = hook;
+      c = this;
+      a = arguments;
 
       try {
-        return callback.apply(this, arguments);
+        return callback.apply(c, a);
       } finally {
-        fx$1 = prev;
+        h$1 = ph;
+        c = pc;
+        a = pa;
       }
     } : callback);
   };
   var useReducer$1 = function useReducer$1(reducer, value, init) {
-    return wrap(fx$1, useReducer(reducer, value, init));
+    return wrap(h$1, c, a, useReducer(reducer, value, init));
   };
   var useState$1 = function useState$1(value) {
-    return wrap(fx$1, useState(value));
+    return wrap(h$1, c, a, useState(value));
   };
 
   /*! (c) Andrea Giammarchi - ISC */
