@@ -329,6 +329,43 @@ self.uhooksDOM = (function (exports) {
   };
 
   /*! (c) Andrea Giammarchi - ISC */
+  var fx$1 = null;
+  var effects$1 = new WeakMap();
+
+  var wrap = function wrap(fx, reduced) {
+    return fx ? [reduced[0], function (value) {
+      if (!effects$1.has(fx)) {
+        effects$1.set(fx, 0);
+        wait.then(function () {
+          effects$1["delete"](fx);
+          fx();
+        });
+      }
+
+      reduced[1](value);
+    }] : reduced;
+  };
+
+  var hooked$1 = function hooked$1(callback, outer) {
+    return hooked(outer ? function hook() {
+      var prev = fx$1;
+      fx$1 = hook;
+
+      try {
+        return callback.apply(this, arguments);
+      } finally {
+        fx$1 = prev;
+      }
+    } : callback);
+  };
+  var useReducer$1 = function useReducer$1(reducer, value, init) {
+    return wrap(fx$1, useReducer(reducer, value, init));
+  };
+  var useState$1 = function useState$1(value) {
+    return wrap(fx$1, useState(value));
+  };
+
+  /*! (c) Andrea Giammarchi - ISC */
   var observer = null;
 
   var find = function find(_ref) {
@@ -346,8 +383,8 @@ self.uhooksDOM = (function (exports) {
     }
   };
 
-  var hooked$1 = function hooked$1(fn) {
-    var hook = hooked(fn);
+  var hooked$2 = function hooked(fn, outer) {
+    var hook = hooked$1(fn, outer);
     return function () {
       var node = hook.apply(this, arguments);
 
@@ -366,15 +403,15 @@ self.uhooksDOM = (function (exports) {
   };
 
   exports.createContext = createContext;
-  exports.hooked = hooked$1;
+  exports.hooked = hooked$2;
   exports.useCallback = useCallback;
   exports.useContext = useContext;
   exports.useEffect = useEffect;
   exports.useLayoutEffect = useLayoutEffect;
   exports.useMemo = useMemo;
-  exports.useReducer = useReducer;
+  exports.useReducer = useReducer$1;
   exports.useRef = useRef;
-  exports.useState = useState;
+  exports.useState = useState$1;
   exports.wait = wait;
 
   

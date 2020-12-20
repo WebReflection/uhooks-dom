@@ -3,7 +3,7 @@
 import CustomEvent from '@ungap/custom-event';
 import {observe} from 'uconnect';
 
-import {hooked as $hooked, dropEffect, hasEffect} from 'uhooks';
+import {hooked as $hooked, dropEffect, hasEffect} from 'uhooks-fx';
 
 let observer = null;
 
@@ -28,8 +28,8 @@ const get = node => {
   }
 };
 
-export const hooked = fn => {
-  const hook = $hooked(fn);
+export const hooked = (fn, outer) => {
+  const hook = $hooked(fn, outer);
   return function () {
     const node = hook.apply(this, arguments);
     if (hasEffect(hook)) {
@@ -53,4 +53,4 @@ export {
   useCallback, useMemo,
   useEffect, useLayoutEffect,
   useReducer, useState, useRef
-} from 'uhooks';
+} from 'uhooks-fx';
