@@ -8,7 +8,7 @@ export default {
     includePaths({
       include: {
         '@ungap/custom-event': 'esm/custom-event.js',
-        '@webreflection/lie': 'esm/promise.js'
+        '@webreflection/lie': 'node_modules/uhooks/esm/promise.js'
       }
     }),
     nodeResolve(),

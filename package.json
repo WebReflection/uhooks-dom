@@ -43,7 +43,7 @@
   "dependencies": {
     "@ungap/custom-event": "^0.3.1",
     "uconnect": "^0.2.7",
-    "uhooks": "^0.1.15"
+    "uhooks": "^0.1.16"
   },
   "repository": {
     "type": "git",
