@@ -258,10 +258,7 @@ self.uhooksDOM = (function (exports) {
     var info = getInfo();
     var i = info.i,
         s = info.s;
-    if (i === s.length) s.push({
-      $: memo(),
-      _: guards
-    });else if (!guards || guards.some(different, s[i]._)) s[i] = {
+    if (i === s.length || !guards || guards.some(different, s[i]._)) s[i] = {
       $: memo(),
       _: guards
     };
