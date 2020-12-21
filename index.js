@@ -147,7 +147,15 @@ self.uhooksDOM = (function (exports) {
   var runSchedule = function runSchedule() {
     var previous = schedule;
     schedule = new Set();
-    previous.forEach(update);
+    previous.forEach(function (_ref) {
+      var h = _ref.h,
+          c = _ref.c,
+          a = _ref.a,
+          e = _ref.e;
+      // avoid running schedules when the hook is
+      // re-executed before such schedule happens
+      if (e) h.apply(c, a);
+    });
   };
 
   var fx = new WeakMap();
@@ -208,15 +216,6 @@ self.uhooksDOM = (function (exports) {
       wait.then(runSchedule);
     }
   };
-  var update = function update(_ref) {
-    var h = _ref.h,
-        c = _ref.c,
-        a = _ref.a,
-        e = _ref.e;
-    // avoid running schedules when the hook is
-    // re-executed before such schedule happens
-    if (e) h.apply(c, a);
-  };
   var wait = new Lie(function ($) {
     return $();
   });
@@ -245,7 +244,12 @@ self.uhooksDOM = (function (exports) {
       this._ = new Set();
       this.value = newValue;
 
-      _.forEach(update);
+      _.forEach(function (_ref2) {
+        var h = _ref2.h,
+            c = _ref2.c,
+            a = _ref2.a;
+        h.apply(c, a);
+      });
     }
   }
 
