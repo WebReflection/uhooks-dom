@@ -1,6 +1,6 @@
 {
   "name": "uhooks-dom",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "A uhooks + uconnect based alternative to dom-augmentor",
   "main": "./cjs/index.js",
   "scripts": {
