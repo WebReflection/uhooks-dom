@@ -4,12 +4,14 @@
   "description": "A uhooks + uconnect based alternative to dom-augmentor",
   "main": "./cjs/index.js",
   "scripts": {
-    "build": "npm run cjs && npm run rollup:es && npm run rollup:babel && npm run min && npm run size",
+    "build": "npm run async && npm run cjs && npm run rollup:async && npm run rollup:es && npm run rollup:babel && npm run min && npm run size",
     "cjs": "ascjs --no-default esm cjs",
+    "async": "cp esm/index.js esm/async.js && sed -i.bck 's/uhooks-fx/uhooks-fx\\/async/; s/\\/\\*async\\*\\//async/; s/\\/\\*await\\*\\//await/' esm/async.js && rm -rf  esm/async.js.bck",
+    "rollup:async": "rollup --config rollup/async.config.js && sed -i.bck 's/^var /self./; s/Object.defineProperty[^)]*).//' async.js && rm -rf async.js.bck",
     "rollup:es": "rollup --config rollup/es.config.js && sed -i.bck 's/^var /self./; s/Object.defineProperty[^)]*).//' es.js && rm -rf es.js.bck",
     "rollup:babel": "rollup --config rollup/babel.config.js && sed -i.bck 's/^var /self./; s/Object.define[^;]*;//' index.js && rm -rf index.js.bck",
     "min": "terser index.js --comments='/^!/' -c -m -o min.js",
-    "size": "cat min.js | brotli | wc -c && cat es.js | brotli | wc -c"
+    "size": "echo 'async ES6' && cat async.js | brotli | wc -c && echo '' && echo 'sync ES5 / ES6' && cat min.js | brotli | wc -c && cat es.js | brotli | wc -c"
   },
   "keywords": [
     "uhooks",
@@ -37,13 +39,17 @@
       "import": "./esm/index.js",
       "default": "./cjs/index.js"
     },
+    "./async": {
+      "import": "./esm/async.js",
+      "default": "./cjs/async.js"
+    },
     "./package.json": "./package.json"
   },
   "unpkg": "min.js",
   "dependencies": {
     "@ungap/custom-event": "^0.3.1",
     "uconnect": "^0.2.7",
-    "uhooks-fx": "^0.1.7"
+    "uhooks-fx": "^0.2.0"
   },
   "repository": {
     "type": "git",

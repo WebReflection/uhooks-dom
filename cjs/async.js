@@ -4,7 +4,7 @@
 const CustomEvent = (m => m.__esModule ? /* istanbul ignore next */ m.default : /* istanbul ignore next */ m)(require('@ungap/custom-event'));
 const {observe} = require('uconnect');
 
-const {hooked: $hooked, dropEffect, hasEffect} = require('uhooks-fx');
+const {hooked: $hooked, dropEffect, hasEffect} = require('uhooks-fx/async');
 
 let observer = null;
 
@@ -31,8 +31,8 @@ const get = node => {
 
 const hooked = (fn, outer) => {
   const hook = $hooked(fn, outer);
-  return /*async*/ function () {
-    const node = /*await*/ hook.apply(this, arguments);
+  return async function () {
+    const node = await hook.apply(this, arguments);
     if (hasEffect(hook)) {
       const element = get(node);
       if (!observer)
@@ -60,4 +60,4 @@ exports.hooked = hooked;
   exports.useReducer = m.useReducer;
   exports.useState = m.useState;
   exports.useRef = m.useRef;
-})(require('uhooks-fx'));
+})(require('uhooks-fx/async'));

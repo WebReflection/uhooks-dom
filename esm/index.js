@@ -30,8 +30,8 @@ const get = node => {
 
 export const hooked = (fn, outer) => {
   const hook = $hooked(fn, outer);
-  return function () {
-    const node = hook.apply(this, arguments);
+  return /*async*/ function () {
+    const node = /*await*/ hook.apply(this, arguments);
     if (hasEffect(hook)) {
       const element = get(node);
       if (!observer)

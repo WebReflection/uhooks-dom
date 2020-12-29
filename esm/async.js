@@ -1,10 +1,9 @@
-'use strict';
 /*! (c) Andrea Giammarchi - ISC */
 
-const CustomEvent = (m => m.__esModule ? /* istanbul ignore next */ m.default : /* istanbul ignore next */ m)(require('@ungap/custom-event'));
-const {observe} = require('uconnect');
+import CustomEvent from '@ungap/custom-event';
+import {observe} from 'uconnect';
 
-const {hooked: $hooked, dropEffect, hasEffect} = require('uhooks-fx');
+import {hooked as $hooked, dropEffect, hasEffect} from 'uhooks-fx/async';
 
 let observer = null;
 
@@ -29,10 +28,10 @@ const get = node => {
   }
 };
 
-const hooked = (fn, outer) => {
+export const hooked = (fn, outer) => {
   const hook = $hooked(fn, outer);
-  return /*async*/ function () {
-    const node = /*await*/ hook.apply(this, arguments);
+  return async function () {
+    const node = await hook.apply(this, arguments);
     if (hasEffect(hook)) {
       const element = get(node);
       if (!observer)
@@ -47,17 +46,11 @@ const hooked = (fn, outer) => {
     return node;
   };
 };
-exports.hooked = hooked;
 
-(m => {
-  exports.wait = m.wait;
-  exports.createContext = m.createContext;
-  exports.useContext = m.useContext;
-  exports.useCallback = m.useCallback;
-  exports.useMemo = m.useMemo;
-  exports.useEffect = m.useEffect;
-  exports.useLayoutEffect = m.useLayoutEffect;
-  exports.useReducer = m.useReducer;
-  exports.useState = m.useState;
-  exports.useRef = m.useRef;
-})(require('uhooks-fx'));
+export {
+  wait,
+  createContext, useContext,
+  useCallback, useMemo,
+  useEffect, useLayoutEffect,
+  useReducer, useState, useRef
+} from 'uhooks-fx/async';

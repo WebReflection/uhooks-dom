@@ -360,7 +360,9 @@ self.uhooksDOM = (function (exports) {
   };
 
   var hooked$1 = function hooked$1(callback, outer) {
-    return hooked(outer ? function hook() {
+    return hooked(outer ?
+    /*async*/
+    function hook() {
       var ph = h$1,
           pc = c,
           pa = a;
@@ -369,7 +371,10 @@ self.uhooksDOM = (function (exports) {
       a = arguments;
 
       try {
-        return callback.apply(c, a);
+        return (
+          /*await*/
+          callback.apply(c, a)
+        );
       } finally {
         h$1 = ph;
         c = pc;
@@ -404,21 +409,26 @@ self.uhooksDOM = (function (exports) {
 
   var hooked$2 = function hooked(fn, outer) {
     var hook = hooked$1(fn, outer);
-    return function () {
-      var node = hook.apply(this, arguments);
+    return (
+      /*async*/
+      function () {
+        var node =
+        /*await*/
+        hook.apply(this, arguments);
 
-      if (hasEffect(hook)) {
-        var element = get(node);
-        if (!observer) observer = observe(element.ownerDocument, 'children', CustomEvent$1);
-        if (!observer.has(element)) observer.connect(element, {
-          disconnected: function disconnected() {
-            dropEffect(hook);
-          }
-        });
+        if (hasEffect(hook)) {
+          var element = get(node);
+          if (!observer) observer = observe(element.ownerDocument, 'children', CustomEvent$1);
+          if (!observer.has(element)) observer.connect(element, {
+            disconnected: function disconnected() {
+              dropEffect(hook);
+            }
+          });
+        }
+
+        return node;
       }
-
-      return node;
-    };
+    );
   };
 
   exports.createContext = createContext;
