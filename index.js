@@ -442,8 +442,6 @@ self.uhooksDOM = (function (exports) {
   exports.useState = useState$1;
   exports.wait = wait;
 
-  
-
   return exports;
 
 }({}));
