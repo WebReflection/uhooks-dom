@@ -1,7 +1,7 @@
 'use strict';
 /*! (c) Andrea Giammarchi - ISC */
 
-const CustomEvent = (m => m.__esModule ? /* istanbul ignore next */ m.default : /* istanbul ignore next */ m)(require('@ungap/custom-event'));
+const CustomEvent = (m => /* c8 ignore start */ m.__esModule ? m.default : m /* c8 ignore stop */)(require('@ungap/custom-event'));
 const {observe} = require('uconnect');
 
 const {hooked: $hooked, dropEffect, hasEffect} = require('uhooks-fx');
