@@ -3,10 +3,9 @@
 
 const CustomEvent = (m => /* c8 ignore start */ m.__esModule ? m.default : m /* c8 ignore stop */)(require('@ungap/custom-event'));
 const {observe} = require('uconnect');
+const observer = observe(document, 'children', CustomEvent);
 
 const {hooked: $hooked, dropEffect, hasEffect} = require('uhooks-fx');
-
-let observer = null;
 
 const find = ({firstChild}) => {
   if (
@@ -35,8 +34,6 @@ const hooked = (fn, outer) => {
     const node = /*await*/ hook.apply(this, arguments);
     if (hasEffect(hook)) {
       const element = get(node);
-      if (!observer)
-        observer = observe(element.ownerDocument, 'children', CustomEvent);
       if (!observer.has(element))
         observer.connect(element, {
           disconnected() {

@@ -2,10 +2,9 @@
 
 import CustomEvent from '@ungap/custom-event';
 import {observe} from 'uconnect';
+const observer = observe(document, 'children', CustomEvent);
 
 import {hooked as $hooked, dropEffect, hasEffect} from 'uhooks-fx/async';
-
-let observer = null;
 
 const find = ({firstChild}) => {
   if (
@@ -34,8 +33,6 @@ export const hooked = (fn, outer) => {
     const node = await hook.apply(this, arguments);
     if (hasEffect(hook)) {
       const element = get(node);
-      if (!observer)
-        observer = observe(element.ownerDocument, 'children', CustomEvent);
       if (!observer.has(element))
         observer.connect(element, {
           disconnected() {
