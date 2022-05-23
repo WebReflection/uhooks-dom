@@ -1,21 +1,6 @@
 self.uhooksDOM = (function (exports) {
   'use strict';
 
-  /*! (c) Andrea Giammarchi - ISC */
-  var self = {};
-  self.CustomEvent = typeof CustomEvent === 'function' ? CustomEvent : function (__p__) {
-    CustomEvent[__p__] = new CustomEvent('').constructor[__p__];
-    return CustomEvent;
-
-    function CustomEvent(type, init) {
-      if (!init) init = {};
-      var e = document.createEvent('CustomEvent');
-      e.initCustomEvent(type, !!init.bubbles, !!init.cancelable, init.detail);
-      return e;
-    }
-  }('prototype');
-  var CustomEvent$1 = self.CustomEvent;
-
   /**
    * @typedef {Object} Handler an object that handle events.
    * @property {(event: Event) => void} connected an optional method triggered when node is connected.
@@ -37,409 +22,330 @@ self.uhooksDOM = (function (exports) {
    * @param {MutationObserver} MO a MutationObserver constructor (polyfilled in SSR).
    * @returns {UConnect} an utility to connect or disconnect nodes to observe.
    */
-  var observe = function observe(root, parse, CE, MO) {
-    var observed = new WeakMap(); // these two should be WeakSet but IE11 happens
+  const observe = (root, parse, CE, MO) => {
+    const observed = new WeakMap;
 
-    var wmin = new WeakMap();
-    var wmout = new WeakMap();
+    // these two should be WeakSet but IE11 happens
+    const wmin = new WeakMap;
+    const wmout = new WeakMap;
 
-    var has = function has(node) {
-      return observed.has(node);
-    };
-
-    var disconnect = function disconnect(node) {
+    const has = node => observed.has(node);
+    const disconnect = node => {
       if (has(node)) {
         listener(node, node.removeEventListener, observed.get(node));
-        observed["delete"](node);
+        observed.delete(node);
       }
     };
-
-    var connect = function connect(node, handler) {
+    const connect = (node, handler) => {
       disconnect(node);
-      if (!(handler || (handler = {})).handleEvent) handler.handleEvent = handleEvent;
+      if (!(handler || (handler = {})).handleEvent)
+        handler.handleEvent = handleEvent;
       listener(node, node.addEventListener, handler);
       observed.set(node, handler);
     };
 
-    var listener = function listener(node, method, handler) {
+    const listener = (node, method, handler) => {
       method.call(node, 'disconnected', handler);
       method.call(node, 'connected', handler);
     };
 
-    var notifyObserved = function notifyObserved(nodes, type, wmin, wmout) {
-      for (var length = nodes.length, i = 0; i < length; i++) {
+    const notifyObserved = (nodes, type, wmin, wmout) => {
+      for (let {length} = nodes, i = 0; i < length; i++)
         notifyTarget(nodes[i], type, wmin, wmout);
-      }
     };
 
-    var notifyTarget = function notifyTarget(node, type, wmin, wmout) {
+    const notifyTarget = (node, type, wmin, wmout) => {
       if (has(node) && !wmin.has(node)) {
-        wmout["delete"](node);
+        wmout.delete(node);
         wmin.set(node, 0);
         node.dispatchEvent(new (CE || CustomEvent)(type));
       }
-
       notifyObserved(node[parse || 'children'] || [], type, wmin, wmout);
     };
 
-    var mo = new (MO || MutationObserver)(function (nodes) {
-      for (var length = nodes.length, i = 0; i < length; i++) {
-        var _nodes$i = nodes[i],
-            removedNodes = _nodes$i.removedNodes,
-            addedNodes = _nodes$i.addedNodes;
+    const mo = new (MO || MutationObserver)(nodes => {
+      for (let {length} = nodes, i = 0; i < length; i++) {
+        const {removedNodes, addedNodes} = nodes[i];
         notifyObserved(removedNodes, 'disconnected', wmout, wmin);
         notifyObserved(addedNodes, 'connected', wmin, wmout);
       }
     });
+
     mo.add = add;
     mo.add(root || document);
-    var attachShadow = Element.prototype.attachShadow;
-    if (attachShadow) Element.prototype.attachShadow = function (init) {
-      var sd = attachShadow.call(this, init);
-      mo.add(sd);
-      return sd;
-    };
-    return {
-      has: has,
-      connect: connect,
-      disconnect: disconnect,
-      kill: function kill() {
-        mo.disconnect();
-      }
-    };
+
+    const {attachShadow} = Element.prototype;
+    if (attachShadow)
+      Element.prototype.attachShadow = function (init) {
+        const sd = attachShadow.call(this, init);
+        mo.add(sd);
+        return sd;
+      };
+
+    return {has, connect, disconnect, kill() { mo.disconnect(); }};
   };
 
   function add(node) {
-    this.observe(node, {
-      subtree: true,
-      childList: true
-    });
+    this.observe(node, {subtree: true, childList: true});
   }
 
   function handleEvent(event) {
-    if (event.type in this) this[event.type](event);
+    if (event.type in this)
+      this[event.type](event);
   }
 
-  var Lie = typeof Promise === 'function' ? Promise : function (fn) {
-    var queue = [],
-        resolved = 0,
-        value;
-    fn(function ($) {
-      value = $;
-      resolved = 1;
-      queue.splice(0).forEach(then);
-    });
-    return {
-      then: then
-    };
+  let info = null, schedule = new Set;
 
-    function then(fn) {
-      return resolved ? setTimeout(fn, 0, value) : queue.push(fn), this;
-    }
-  };
-
-  var info = null,
-      schedule = new Set();
-
-  var invoke = function invoke(effect) {
-    var $ = effect.$,
-        r = effect.r,
-        h = effect.h;
-
+  const invoke = effect => {
+    const {$, r, h} = effect;
     if (isFunction(r)) {
-      fx$1.get(h)["delete"](effect);
+      fx$1.get(h).delete(effect);
       r();
     }
-
-    if (isFunction(effect.r = $())) fx$1.get(h).add(effect);
+    if (isFunction(effect.r = $()))
+      fx$1.get(h).add(effect);
   };
 
-  var runSchedule = function runSchedule() {
-    var previous = schedule;
-    schedule = new Set();
-    previous.forEach(function (_ref) {
-      var h = _ref.h,
-          c = _ref.c,
-          a = _ref.a,
-          e = _ref.e;
+  const runSchedule = () => {
+    const previous = schedule;
+    schedule = new Set;
+    previous.forEach(({h, c, a, e}) => {
       // avoid running schedules when the hook is
       // re-executed before such schedule happens
-      if (e) h.apply(c, a);
+      if (e)
+        h.apply(c, a);
     });
   };
 
-  var fx$1 = new WeakMap();
-  var effects = [];
-  var layoutEffects = [];
+  const fx$1 = new WeakMap;
+  const effects = [];
+  const layoutEffects = [];
+
   function different(value, i) {
     return value !== this[i];
   }
-  var dropEffect = function dropEffect(hook) {
-    var effects = fx$1.get(hook);
-    if (effects) wait.then(function () {
-      effects.forEach(function (effect) {
-        effect.r();
-        effect.r = null;
-        effect.d = true;
+  const dropEffect = hook => {
+    const effects = fx$1.get(hook);
+    if (effects)
+      wait.then(() => {
+        effects.forEach(effect => {
+          effect.r();
+          effect.r = null;
+          effect.d = true;
+        });
+        effects.clear();
       });
-      effects.clear();
-    });
   };
-  var getInfo = function getInfo() {
-    return info;
-  };
-  var hasEffect = function hasEffect(hook) {
-    return fx$1.has(hook);
-  };
-  var isFunction = function isFunction(f) {
-    return typeof f === 'function';
-  };
-  var hooked$2 = function hooked(callback) {
-    var current = {
-      h: hook,
-      c: null,
-      a: null,
-      e: 0,
-      i: 0,
-      s: []
-    };
-    return hook;
 
+  const getInfo = () => info;
+
+  const hasEffect = hook => fx$1.has(hook);
+
+  const isFunction = f => typeof f === 'function';
+
+  const hooked$2 = callback => {
+    const current = {h: hook, c: null, a: null, e: 0, i: 0, s: []};
+    return hook;
     function hook() {
-      var prev = info;
+      const prev = info;
       info = current;
       current.e = current.i = 0;
-
       try {
         return callback.apply(current.c = this, current.a = arguments);
-      } finally {
+      }
+      finally {
         info = prev;
-        if (effects.length) wait.then(effects.forEach.bind(effects.splice(0), invoke));
-        if (layoutEffects.length) layoutEffects.splice(0).forEach(invoke);
+        if (effects.length)
+          wait.then(effects.forEach.bind(effects.splice(0), invoke));
+        if (layoutEffects.length)
+          layoutEffects.splice(0).forEach(invoke);
       }
     }
   };
-  var reschedule = function reschedule(info) {
+
+  const reschedule = info => {
     if (!schedule.has(info)) {
       info.e = 1;
       schedule.add(info);
       wait.then(runSchedule);
     }
   };
-  var wait = new Lie(function ($) {
-    return $();
+
+  const wait = Promise.resolve();
+
+  const createContext = value => ({
+    _: new Set,
+    provide,
+    value
   });
 
-  var createContext = function createContext(value) {
-    return {
-      _: new Set(),
-      provide: provide,
-      value: value
-    };
-  };
-  var useContext = function useContext(_ref) {
-    var _ = _ref._,
-        value = _ref.value;
-
+  const useContext = ({_, value}) => {
     _.add(getInfo());
-
     return value;
   };
 
   function provide(newValue) {
-    var _ = this._,
-        value = this.value;
-
+    const {_, value} = this;
     if (value !== newValue) {
-      this._ = new Set();
+      this._ = new Set;
       this.value = newValue;
-
-      _.forEach(function (_ref2) {
-        var h = _ref2.h,
-            c = _ref2.c,
-            a = _ref2.a;
+      _.forEach(({h, c, a}) => {
         h.apply(c, a);
       });
     }
   }
 
-  var useCallback = function useCallback(fn, guards) {
-    return useMemo(function () {
-      return fn;
-    }, guards);
-  };
-  var useMemo = function useMemo(memo, guards) {
-    var info = getInfo();
-    var i = info.i,
-        s = info.s;
-    if (i === s.length || !guards || guards.some(different, s[i]._)) s[i] = {
-      $: memo(),
-      _: guards
-    };
+  const useCallback = (fn, guards) => useMemo(() => fn, guards);
+
+  const useMemo = (memo, guards) => {
+    const info = getInfo();
+    const {i, s} = info;
+    if (i === s.length || !guards || guards.some(different, s[i]._))
+      s[i] = {$: memo(), _: guards};
     return s[info.i++].$;
   };
 
-  var createEffect = function createEffect(stack) {
-    return function (callback, guards) {
-      var info = getInfo();
-      var i = info.i,
-          s = info.s,
-          h = info.h;
-      var call = i === s.length;
-      info.i++;
-
-      if (call) {
-        if (!fx$1.has(h)) fx$1.set(h, new Set());
-        s[i] = {
-          $: callback,
-          _: guards,
-          r: null,
-          d: false,
-          h: h
-        };
-      }
-
-      if (call || !guards || s[i].d || guards.some(different, s[i]._)) stack.push(s[i]);
-      s[i].$ = callback;
-      s[i]._ = guards;
-    };
+  const createEffect = stack => (callback, guards) => {
+    const info = getInfo();
+    const {i, s, h} = info;
+    const call = i === s.length;
+    info.i++;
+    if (call) {
+      if (!fx$1.has(h))
+        fx$1.set(h, new Set);
+      s[i] = {$: callback, _: guards, r: null, d: false, h};
+    }
+    if (call || !guards || s[i].d || guards.some(different, s[i]._))
+      stack.push(s[i]);
+    s[i].$ = callback;
+    s[i]._ = guards;
+    s[i].d = false;
   };
 
-  var useEffect = createEffect(effects);
-  var useLayoutEffect = createEffect(layoutEffects);
+  const useEffect = createEffect(effects);
 
-  var getValue = function getValue(value, f) {
-    return isFunction(f) ? f(value) : f;
-  };
+  const useLayoutEffect = createEffect(layoutEffects);
 
-  var useReducer$1 = function useReducer(reducer, value, init) {
-    var info = getInfo();
-    var i = info.i,
-        s = info.s;
-    if (i === s.length) s.push({
-      $: isFunction(init) ? init(value) : getValue(void 0, value),
-      set: function set(value) {
-        s[i].$ = reducer(s[i].$, value);
-        reschedule(info);
-      }
-    });
-    var _s$info$i = s[info.i++],
-        $ = _s$info$i.$,
-        set = _s$info$i.set;
+  const getValue = (value, f) => isFunction(f) ? f(value) : f;
+
+  const useReducer$1 = (reducer, value, init) => {
+    const info = getInfo();
+    const {i, s} = info;
+    if (i === s.length)
+      s.push({
+        $: isFunction(init) ?
+            init(value) : getValue(void 0, value),
+        set: value => {
+          s[i].$ = reducer(s[i].$, value);
+          reschedule(info);
+        }
+      });
+    const {$, set} = s[info.i++];
     return [$, set];
   };
-  var useState$1 = function useState(value) {
-    return useReducer$1(getValue, value);
-  };
 
-  var useRef = function useRef(current) {
-    var info = getInfo();
-    var i = info.i,
-        s = info.s;
-    if (i === s.length) s.push({
-      current: current
-    });
+  const useState$1 = value => useReducer$1(getValue, value);
+
+  const useRef = current => {
+    const info = getInfo();
+    const {i, s} = info;
+    if (i === s.length)
+      s.push({current});
     return s[info.i++];
   };
 
   /*! (c) Andrea Giammarchi - ISC */
-  var h = null,
-      c = null,
-      a = null;
-  var fx = new WeakMap();
-  var states = new WeakMap();
 
-  var set = function set(h, c, a, update) {
-    var wrap = function wrap(value) {
+  let h = null, c = null, a = null;
+
+  const fx = new WeakMap;
+  const states = new WeakMap;
+
+  const set = (h, c, a, update) => {
+    const wrap = value => {
       if (!fx.has(h)) {
         fx.set(h, 0);
-        wait.then(function () {
-          fx["delete"](h);
+        wait.then(() => {
+          fx.delete(h);
           h.apply(c, a);
         });
       }
-
       update(value);
     };
-
     states.set(update, wrap);
     return wrap;
   };
 
-  var wrap = function wrap(h, c, a, state) {
-    return h ? [state[0], states.get(state[1]) || set(h, c, a, state[1])] : state;
-  };
+  const wrap = (h, c, a, state) => (
+    h ? [
+      state[0],
+      states.get(state[1]) || set(h, c, a, state[1])
+    ] :
+    state
+  );
 
-  var hooked$1 = function hooked(callback, outer) {
-    var hook = hooked$2(outer ?
-    /*async*/
-    function () {
-      var ph = h,
-          pc = c,
-          pa = a;
-      h = hook;
-      c = this;
-      a = arguments;
-
-      try {
-        return (
-          /*await*/
-          callback.apply(c, a)
-        );
-      } finally {
-        h = ph;
-        c = pc;
-        a = pa;
-      }
-    } : callback);
+  const hooked$1 = (callback, outer) => {
+    const hook = hooked$2(
+      outer ?
+        /*async*/ function () {
+          const [ph, pc, pa] = [h, c, a];
+          [h, c, a] = [hook, this, arguments];
+          try {
+            return /*await*/ callback.apply(c, a);
+          }
+          finally {
+            [h, c, a] = [ph, pc, pa];
+          }
+        } :
+        callback
+    );
     return hook;
   };
-  var useReducer = function useReducer(reducer, value, init) {
-    return wrap(h, c, a, useReducer$1(reducer, value, init));
-  };
-  var useState = function useState(value) {
-    return wrap(h, c, a, useState$1(value));
-  };
+
+  const useReducer = (reducer, value, init) =>
+                              wrap(h, c, a, useReducer$1(reducer, value, init));
+
+  const useState = value => wrap(h, c, a, useState$1(value));
 
   /*! (c) Andrea Giammarchi - ISC */
-  var observer = observe(document, 'children', CustomEvent$1);
+  const observer = observe(document, 'children', CustomEvent);
 
-  var find = function find(_ref) {
-    var firstChild = _ref.firstChild;
-    if (firstChild && firstChild.nodeType !== 1 && !(firstChild = firstChild.nextElementSibling)) throw 'unobservable';
+  const find = ({firstChild}) => {
+    if (
+      firstChild &&
+      firstChild.nodeType !== 1 &&
+      !(firstChild = firstChild.nextElementSibling)
+    )
+      throw 'unobservable';
     return firstChild;
   };
 
-  var get = function get(node) {
-    var nodeType = node.nodeType;
-    if (nodeType) return nodeType === 1 ? node : find(node);else {
+  const get = node => {
+    const {nodeType} = node;
+    if (nodeType)
+      return nodeType === 1 ? node : find(node);
+    else {
       // give a chance to facades to return a reasonable value
-      var value = node.valueOf();
+      const value = node.valueOf();
       return value !== node ? get(value) : find(value);
     }
   };
 
-  var hooked = function hooked(fn, outer) {
-    var hook = hooked$1(fn, outer);
-    return (
-      /*async*/
-      function () {
-        var node =
-        /*await*/
-        hook.apply(this, arguments);
-
-        if (hasEffect(hook)) {
-          var element = get(node);
-          if (!observer.has(element)) observer.connect(element, {
-            disconnected: function disconnected() {
+  const hooked = (fn, outer) => {
+    const hook = hooked$1(fn, outer);
+    return /*async*/ function () {
+      const node = /*await*/ hook.apply(this, arguments);
+      if (hasEffect(hook)) {
+        const element = get(node);
+        if (!observer.has(element))
+          observer.connect(element, {
+            disconnected() {
               dropEffect(hook);
             }
           });
-        }
-
-        return node;
       }
-    );
+      return node;
+    };
   };
 
   exports.createContext = createContext;

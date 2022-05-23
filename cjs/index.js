@@ -1,7 +1,6 @@
 'use strict';
 /*! (c) Andrea Giammarchi - ISC */
 
-const CustomEvent = (m => /* c8 ignore start */ m.__esModule ? m.default : m /* c8 ignore stop */)(require('@ungap/custom-event'));
 const {observe} = require('uconnect');
 const observer = observe(document, 'children', CustomEvent);
 

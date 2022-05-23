@@ -1,6 +1,5 @@
 /*! (c) Andrea Giammarchi - ISC */
 
-import CustomEvent from '@ungap/custom-event';
 import {observe} from 'uconnect';
 const observer = observe(document, 'children', CustomEvent);
 
